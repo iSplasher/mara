@@ -746,7 +746,7 @@ extern "C" DLLEXPORT double printd(double X)
 // Main driver code.
 //===----------------------------------------------------------------------===//
 
-int main()
+int main2()
 {
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();

@@ -1,0 +1,10 @@
+{
+  "name": "rara",
+  "version": "0.1.0",
+  "dependencies": [
+    "catch2",
+    "llvm"
+  ],
+  "builtin-baseline": "019027ada51d9835643c741435fdc63a61e3e3c9",
+  "overrides": [{ "name": "catch2", "version": "3.0.1#2" }]
+}

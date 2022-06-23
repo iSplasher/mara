@@ -1,10 +1,13 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "./common.h"
 
 /**
  * @brief Represents any kind of bult-in token made up
- *       of a text or symbols. These do not have whitespace in between.
+ *       of text or symbols. These do not have whitespace in between.
  */
 enum class Token
 {
@@ -39,9 +42,9 @@ enum class IdentifierType
     // identifier that refers to a keyword or symbol like ::
     token = 1 << 2,
 
-    // identifier that refers to a [...] or :: or (..)
+    // identifier that refers to a [...] or :(): or (..)
     // this differs from token in that it allows for content inside the symbols
-    symbol = 1 << 3,
+    value = 1 << 3,
 
     // identifier that refers to a literal like true, 2, 3.14
     literal = 1 << 4,
@@ -82,6 +85,25 @@ enum class ValueType
     character = 1 << 2,
 
     string = 1 << 3,
+
+    list = 1 << 4,
+
+    object = 1 << 5,
 };
 
 DEFINE_ENUM_FLAGS(ValueType)
+
+class Lexer
+{
+
+public:
+    Lexer(std::string program);
+
+    /**
+     * @brief Tokenizes the program and returns a vector of tokens.
+     */
+    std::vector<Token> tokenize();
+
+private:
+    std::string program;
+};
