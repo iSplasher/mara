@@ -3,6 +3,11 @@ project(rara VERSION 0.1.0)
 
 add_executable(rara src/main.cpp)
 
+option(BUILD_DOCS "Enable building docs" ON)
+if(BUILD_DOCS)
+    add_subdirectory(docs)
+endif()
+
 # Use C++20
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
