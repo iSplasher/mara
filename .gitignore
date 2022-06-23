@@ -1,6 +1,7 @@
 docs/xml
 docs/src/include
 vcpkg_installed
+.vscode
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,cmake,c++
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,visualstudiocode,cmake,c++

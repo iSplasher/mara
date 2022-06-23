@@ -3,6 +3,8 @@
 
 #include "../include/lexer.h"
 
+int a = 2;
+
 SCENARIO("Lexer can correctly tokenize", "[lexer]")
 {
     GIVEN("a declaration")
