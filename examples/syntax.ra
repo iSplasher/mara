@@ -1,0 +1,78 @@
+----------- comments
+
+-- comment
+
+!-
+multi line comment
+-!
+
+------------ variables
+
+-- every variable declaration is immutable by default
+
+-- variable declaration
+-- variabel whitespace allowed
+-- type inference
+
+a : : 2
+a :: 2
+a::2
+
+-- :: is an alias of 'as'
+b as 1
+
+-- explicit types
+
+a : int : 2
+a :int: 2
+a:int:2
+
+-- mutable variables
+
+a :mutable int: 2
+
+-- declarations with no default values use ? as placeholder
+b :mutable int: ?
+
+-- reassignment (mutation, notice the bang at the end)
+a = 3!
+b = a!
+
+------------- functions
+
+-- functions are first-class citizens (maybe has the type F[args...]?)
+-- functions are immutable
+-- functions can have documentation right below the name
+foo : int : (a: int, b: int)
+    !-
+    function doc
+    -!
+    body
+
+    return 1
+
+-- can also be single line doc (only the first comment is part of the doc?)
+bar :int: (a: int, b: int)
+    -- function doc
+    -- body here
+    body
+    return 1
+
+-- can also have none, no return type too
+zar :: (a: int, b: int)
+    body
+
+kas as (a: int, b: int)
+    -- since :: is an alias of 'as', this is possible too
+    body
+    -- explicit return, but not required
+    return
+
+baz : mutable int: (a: int, b: int)
+    -- not allowed (for now?), but it means that baz can be reassigned
+    body
+    return 1
+
+-------------- modules
+
+-- should allow recursive imports
