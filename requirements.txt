@@ -1,4 +1,4 @@
-Sphinx==5.0.2
+Sphinx
 breathe==4.34.0
 myst_parser==0.18.0
 sphinx_book_theme==0.3.2

@@ -1,5 +1,7 @@
+Requires python 3.6+ to build and configure
+
 ## Docs
 
-Requires doxygen and python installed
+Requires doxygen installed
 
 > pip instal -r requirements.txt

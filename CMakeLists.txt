@@ -1,12 +1,92 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.21)
 
-message(STATUS "WINDOWS KITS: ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
-
-project(rara VERSION 0.1.0)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(VCPKG_FEATURE_FLAGS "versions")
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+# function to print out CMake variables
+function(dump_cmake_variables)
+    get_cmake_property(_variableNames VARIABLES)
+    list(SORT _variableNames)
+
+    foreach(_variableName ${_variableNames})
+        if(ARGV0)
+            unset(MATCHED)
+
+            # case sensitive match
+            # string(REGEX MATCH ${ARGV0} MATCHED ${_variableName})
+            #
+            # case insenstitive match
+            string(TOLOWER "${ARGV0}" ARGV0_lower)
+            string(TOLOWER "${_variableName}" _variableName_lower)
+            string(REGEX MATCH ${ARGV0_lower} MATCHED ${_variableName_lower})
+
+            if(NOT MATCHED)
+                continue()
+            endif()
+        endif()
+
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
+endfunction()
+
+# If using clang-cl, find and include system libraries
+if(WIN32 AND CMAKE_C_COMPILER MATCHES "clang-cl")
+    find_package(PythonInterp)
+
+    # use helper script to get environment variables for clang-cl
+    set(VsDevCmdArgs "")
+
+    if(VCPKG_TARGET_TRIPLET MATCHES "x64")
+        set(VsDevCmdArgs "x64")
+    endif()
+
+    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/VsDevCmd.py" "${VsDevCmdArgs}" OUTPUT_VARIABLE VS_DEV_CMD)
+
+    # see https://renenyffenegger.ch/notes/Windows/development/Visual-Studio/environment-variables/index
+    # parse and set environment variables from script
+    foreach(X IN LISTS VS_DEV_CMD)
+        string(REPLACE "|" ";" X "${X}")
+        list(GET X 0 X_KEY)
+        list(GET X 1 X_VALUE)
+
+        set("ENV{${X_KEY}}" ${X_VALUE})
+
+        # message(STATUS "${X_KEY}: ${X_VALUE}")
+        if(X_KEY MATCHES "^INCLUDE$")
+            set(CMAKE_INCLUDE_PATH ${X_VALUE})
+        endif()
+
+        if(X_KEY MATCHES "^LIB$")
+            set(CMAKE_LIBRARY_PATH ${X_VALUE})
+        endif()
+    endforeach()
+
+    list(INSERT CMAKE_INCLUDE_PATH 0
+        "$ENV{UniversalCRTSdkDir}\\Include\\$ENV{UCRTVersion}\\um"
+        "$ENV{UniversalCRTSdkDir}\\Include\\$ENV{UCRTVersion}\\ucrt"
+        "$ENV{UniversalCRTSdkDir}\\Include\\$ENV{UCRTVersion}\\winrt"
+        "$ENV{UniversalCRTSdkDir}\\Include\\$ENV{UCRTVersion}\\shared"
+        "$ENV{UniversalCRTSdkDir}\\Include\\$ENV{UCRTVersion}\\cppwinrt"
+    )
+    list(INSERT CMAKE_LIBRARY_PATH 0
+        "$ENV{UniversalCRTSdkDir}\\Lib\\$ENV{UCRTVersion}\\ucrt\\$ENV{VSCMD_ARG_TGT_ARCH}"
+        "$ENV{UniversalCRTSdkDir}\\Lib\\$ENV{UCRTVersion}\\um\\$ENV{VSCMD_ARG_TGT_ARCH}"
+    )
+
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -LIBPATH:\"$ENV{UniversalCRTSdkDir}\\Lib\\$ENV{UCRTVersion}\\um\\$ENV{VSCMD_ARG_TGT_ARCH}\"")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -LIBPATH:\"$ENV{UniversalCRTSdkDir}\\Lib\\$ENV{UCRTVersion}\\ucrt\\$ENV{VSCMD_ARG_TGT_ARCH}\"")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -LIBPATH:\"$ENV{VCToolsInstallDir}\\Lib\\$ENV{VSCMD_ARG_TGT_ARCH}\"")
+
+    message(STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
+endif()
+
+message(STATUS "CMAKE_INCLUDE_PATH: ${CMAKE_INCLUDE_PATH}")
+message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
+
+# print out all CMake variables
+# dump_cmake_variables(".*")
+project(rara VERSION 0.1.0)
 
 # —————————————————————————
 # Collect sources
@@ -35,32 +115,6 @@ option(BUILD_TESTS "Enable building tests" ON)
 # Use C++20
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
-
-# function to print out CMake variables
-function(dump_cmake_variables)
-    get_cmake_property(_variableNames VARIABLES)
-    list(SORT _variableNames)
-
-    foreach(_variableName ${_variableNames})
-        if(ARGV0)
-            unset(MATCHED)
-
-            # case sensitive match
-            # string(REGEX MATCH ${ARGV0} MATCHED ${_variableName})
-            #
-            # case insenstitive match
-            string(TOLOWER "${ARGV0}" ARGV0_lower)
-            string(TOLOWER "${_variableName}" _variableName_lower)
-            string(REGEX MATCH ${ARGV0_lower} MATCHED ${_variableName_lower})
-
-            if(NOT MATCHED)
-                continue()
-            endif()
-        endif()
-
-        message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
-endfunction()
 
 # —————————————————————————
 # find packages
@@ -93,14 +147,14 @@ if(BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
-# print out all CMake variables
-# dump_cmake_variables("catch")
-
 # —————————————————————————
 # link libraries
 # —————————————————————————
 
 # Link own library
+target_link_directories(${TARGET_LIB} PRIVATE "$ENV{UniversalCRTSdkDir}\\Lib\\$ENV{UCRTVersion}\\ucrt\\$ENV{VSCMD_ARG_TGT_ARCH}")
+target_link_directories(${TARGET} PRIVATE "$ENV{UniversalCRTSdkDir}\\Lib\\$ENV{UCRTVersion}\\ucrt\\$ENV{VSCMD_ARG_TGT_ARCH}")
+
 target_link_libraries(${TARGET} PRIVATE ${TARGET_LIB})
 
 # Link against LLVM libraries
@@ -114,6 +168,8 @@ if(BUILD_TESTS)
     target_link_libraries(${TARGET_TEST} PRIVATE Catch2::Catch2WithMain)
 endif()
 
+# Increase stack size for llvm
+# string(REPLACE "/STACK:10000000" "/STACK:1000000000" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)

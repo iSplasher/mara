@@ -1,12 +1,11 @@
 #include "../include/lexer.h"
 
-int main(int argc, const char **argv)
-{
+int main(int argc, const char **argv) {
 
-    std::string program = "a :: 2";
-    Lexer lexer(program);
+  std::string program = "a :: 2";
+  Lexer lexer(program);
 
-    auto tokens = lexer.tokenize();
+  auto tokens = lexer.tokenize();
 
-    return 0;
+  return 0;
 }
