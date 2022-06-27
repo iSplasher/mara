@@ -3,7 +3,8 @@
 
 #include "../include/lexer.h"
 
-int a = 2;
+using namespace rara;
+using namespace rara::lexer;
 
 SCENARIO( "Lexer can correctly tokenize", "[lexer]" ) {
 

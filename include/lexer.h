@@ -1,9 +1,14 @@
 #pragma once
 
+#include <parallel_hashmap/phmap_utils.h>
 #include <string>
 #include <vector>
 
 #include "./common.h"
+
+NAMESPACE_BEGIN
+
+namespace lexer {
 
 /**
  * @brief Represents any kind of bult-in token made up
@@ -88,6 +93,21 @@ struct Token {
   Symbol         symbol          = Symbol::none;
   IdentifierType identifier_type = IdentifierType::none;
   ExpressionType expression_type = ExpressionType::none;
+
+  bool operator==( const Token& other ) const {
+    return line == other.line && column == other.column && symbol == other.symbol &&
+           identifier_type == other.identifier_type && expression_type == other.expression_type;
+  };
+
+  /**
+   * @brief This allows use of flat_hash_set or flat_hash_map
+   *
+   * @param t
+   * @return size_t
+   */
+  friend size_t hash_value( const Token& t ) {
+    return phmap::HashState().combine( 0, t.line, t.column, t.symbol, t.identifier_type, t.expression_type );
+  }
 };
 
 /**
@@ -107,3 +127,7 @@ public:
 private:
   std::string program;
 };
+
+}  // namespace lexer
+
+NAMESPACE_END

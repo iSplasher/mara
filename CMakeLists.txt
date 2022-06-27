@@ -91,82 +91,91 @@ project(rara VERSION 0.1.0)
 # —————————————————————————
 # Collect sources
 # —————————————————————————
-include_directories(
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/src
-)
-
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 # remove main.cpp from list of sources so we can reuse the list
 list(FILTER sources EXCLUDE REGEX ".*/main\\.cpp$")
 
-set(TARGET_LIB "raralib")
+# —————————————————————————
+# create targets
+# —————————————————————————
 set(TARGET_TEST "tests")
+set(TARGET_LIB "raralib")
 set(TARGET "rara")
 
+# add own library to share among executables
 add_library(${TARGET_LIB} STATIC ${sources})
 
-add_executable(${TARGET} ${PROJECT_SOURCE_DIR}/src/main.cpp)
+add_executable(${TARGET} ${PROJECT_SOURCE_DIR}/src/main.cpp ${sources})
 
-option(BUILD_DOCS "Enable building docs" ON)
 option(BUILD_TESTS "Enable building tests" ON)
 
-# Use C++20
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
-
-# —————————————————————————
-# find packages
-# —————————————————————————
-find_package(LLVM CONFIG REQUIRED)
-list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
-include(HandleLLVMOptions)
-add_definitions(${LLVM_DEFINITIONS})
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
-
-# Find the libraries that correspond to the LLVM components that we wish to use
-llvm_map_components_to_libnames(llvm_libs Support Core IRReader Target Executionengine Analysis Orcjit x86targetmca x86codegen x86asmparser)
-
-if(BUILD_TESTS)
-    find_package(Catch2 3 REQUIRED)
-endif()
-
-# —————————————————————————
-# create target for library
-# —————————————————————————
 if(BUILD_TESTS)
     file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/tests/*.cpp ${PROJECT_SOURCE_DIR}/tests/*.h)
 
     # These tests can use the Catch2-provided main
-    add_executable(${TARGET_TEST} ${test_sources})
+    add_executable(${TARGET_TEST} ${test_sources} ${sources})
 endif()
+
+option(BUILD_DOCS "Enable building docs" ON)
 
 if(BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
+# Use C++20
+target_compile_features(${TARGET_LIB} PUBLIC cxx_std_20)
+target_compile_features(${TARGET} PUBLIC cxx_std_20)
+target_compile_features(${TARGET_TEST} PUBLIC cxx_std_20)
+set_target_properties(${TARGET_LIB} PROPERTIES CXX_EXTENSIONS OFF)
+set_target_properties(${TARGET} PROPERTIES CXX_EXTENSIONS OFF)
+set_target_properties(${TARGET_TEST} PROPERTIES CXX_EXTENSIONS OFF)
+
+# —————————————————————————
+# find packages
+# —————————————————————————
+
+# all shared includes from packages
+set(SHARED_INCLUDE_DIRS "")
+
+find_package(LLVM CONFIG REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+include(HandleLLVMOptions)
+add_definitions(${LLVM_DEFINITIONS})
+list(APPEND SHARED_INCLUDE_DIRS "${LLVM_INCLUDE_DIRS}")
+
+find_path(PARALLEL_HASHMAP_INCLUDE_DIRS "parallel_hashmap/btree.h" "parallel_hashmap/phmap_utils.h")
+list(APPEND SHARED_INCLUDE_DIRS "${PARALLEL_HASHMAP_INCLUDE_DIRS}")
+
+target_include_directories(${TARGET_LIB} PRIVATE ${SHARED_INCLUDE_DIRS})
+
+if(BUILD_TESTS)
+    find_package(Catch2 3 REQUIRED)
+endif()
+
+# Find the libraries that correspond to the LLVM components that we wish to use
+llvm_map_components_to_libnames(llvm_libs Support Core IRReader Target Executionengine Analysis Orcjit x86targetmca x86codegen x86asmparser)
+
 # —————————————————————————
 # link libraries
 # —————————————————————————
 
-# Link own library
-target_link_directories(${TARGET_LIB} PRIVATE "$ENV{UniversalCRTSdkDir}\\Lib\\$ENV{UCRTVersion}\\ucrt\\$ENV{VSCMD_ARG_TGT_ARCH}")
-target_link_directories(${TARGET} PRIVATE "$ENV{UniversalCRTSdkDir}\\Lib\\$ENV{UCRTVersion}\\ucrt\\$ENV{VSCMD_ARG_TGT_ARCH}")
-
-target_link_libraries(${TARGET} PRIVATE ${TARGET_LIB})
+# all shared libraries from packages
+set(SHARED_LIBRARIES "")
 
 # Link against LLVM libraries
-target_link_libraries(${TARGET_LIB} PRIVATE ${llvm_libs})
+list(APPEND SHARED_LIBRARIES ${llvm_libs})
+
+target_link_libraries(${TARGET_LIB} PRIVATE ${SHARED_LIBRARIES})
 
 if(BUILD_TESTS)
-    # Link own library
-    target_link_libraries(${TARGET_TEST} PRIVATE ${TARGET_LIB})
-
     # These tests can use the Catch2-provided main
     target_link_libraries(${TARGET_TEST} PRIVATE Catch2::Catch2WithMain)
 endif()
+
+# link to own library
+target_link_libraries(${TARGET} PRIVATE ${TARGET_LIB})
+target_link_libraries(${TARGET_TEST} PRIVATE ${TARGET_LIB})
 
 # Increase stack size for llvm
 # string(REPLACE "/STACK:10000000" "/STACK:1000000000" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")

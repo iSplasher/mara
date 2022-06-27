@@ -1,9 +1,14 @@
 #include "../include/lexer.h"
+#include "../include/tree.h"
 
-int main(int argc, const char **argv) {
+using namespace rara;
 
-  std::string program = "a :: 2";
-  Lexer lexer(program);
+int main( int argc, const char** argv ) {
+
+  std::string  program = "a :: 2";
+  lexer::Lexer lexer( program );
+
+  Tree<int> tree( 0 );
 
   auto tokens = lexer.tokenize();
 

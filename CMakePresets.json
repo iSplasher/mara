@@ -3,7 +3,7 @@
     "configurePresets": [
         {
             "name": "default-debug",
-            "displayName": "Clang 13.0.1 (MSVC CLI) for MSVC 17.2.32616.157 (Visual Studio Community 2022 Release - x86)",
+            "displayName": "Clang 13.0.1 (MSVC CLI) for MSVC 17.2.32616.157 (Visual Studio Community 2022 Release - x64)",
             "description": "Using compilers: C = C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\Llvm\\bin\\clang-cl.exe, CXX = C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\Llvm\\bin\\clang-cl.exe",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Ninja",
