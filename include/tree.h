@@ -29,8 +29,8 @@ public:
   Tree<T>( T root )
     : SubTree<T>()
     , _internal_tree() {
-    _internal_tree.set_head( root );
-    this->init( std::shared_ptr<tree<T>>( &_internal_tree ), _internal_tree.end() );
+    auto it = _internal_tree.insert( _internal_tree.end(), root );
+    this->init( std::shared_ptr<tree<T>>( &_internal_tree ), std::move( it ) );
   }
 
   ~Tree<T>() = default;
@@ -48,7 +48,7 @@ protected:
   using Element         = typename tree<T>::iterator;
   using ElementIterator = typename tree<T>::sibling_iterator;
 
-  SubTree<T>( std::shared_ptr<tree<T>> _internal_tree, Element&& root ) { init( _internal_tree, root ); }
+  SubTree<T>( std::shared_ptr<tree<T>> _internal_tree, Element&& root ) { init( _internal_tree, std::move( root ) ); }
 
   SubTree<T>() { _root = Element(); };
 

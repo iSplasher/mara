@@ -91,6 +91,12 @@ project(rara VERSION 0.1.0)
 # —————————————————————————
 # Collect sources
 # —————————————————————————
+# —————————————————————————
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/src
+)
+
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 # remove main.cpp from list of sources so we can reuse the list
@@ -104,9 +110,9 @@ set(TARGET_LIB "raralib")
 set(TARGET "rara")
 
 # add own library to share among executables
-add_library(${TARGET_LIB} STATIC ${sources})
+add_library(${TARGET_LIB} ${sources})
 
-add_executable(${TARGET} ${PROJECT_SOURCE_DIR}/src/main.cpp ${sources})
+add_executable(${TARGET} ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
 option(BUILD_TESTS "Enable building tests" ON)
 
@@ -114,7 +120,7 @@ if(BUILD_TESTS)
     file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/tests/*.cpp ${PROJECT_SOURCE_DIR}/tests/*.h)
 
     # These tests can use the Catch2-provided main
-    add_executable(${TARGET_TEST} ${test_sources} ${sources})
+    add_executable(${TARGET_TEST} ${test_sources})
 endif()
 
 option(BUILD_DOCS "Enable building docs" ON)
@@ -144,10 +150,8 @@ include(HandleLLVMOptions)
 add_definitions(${LLVM_DEFINITIONS})
 list(APPEND SHARED_INCLUDE_DIRS "${LLVM_INCLUDE_DIRS}")
 
-find_path(PARALLEL_HASHMAP_INCLUDE_DIRS "parallel_hashmap/btree.h" "parallel_hashmap/phmap_utils.h")
+find_path(PARALLEL_HASHMAP_INCLUDE_DIRS "parallel_hashmap/phmap_utils.h")
 list(APPEND SHARED_INCLUDE_DIRS "${PARALLEL_HASHMAP_INCLUDE_DIRS}")
-
-target_include_directories(${TARGET_LIB} PRIVATE ${SHARED_INCLUDE_DIRS})
 
 if(BUILD_TESTS)
     find_package(Catch2 3 REQUIRED)
@@ -155,6 +159,10 @@ endif()
 
 # Find the libraries that correspond to the LLVM components that we wish to use
 llvm_map_components_to_libnames(llvm_libs Support Core IRReader Target Executionengine Analysis Orcjit x86targetmca x86codegen x86asmparser)
+
+# add include directories to the executables, the library doesn't need them
+target_include_directories(${TARGET} PRIVATE ${SHARED_INCLUDE_DIRS})
+target_include_directories(${TARGET_TEST} PRIVATE ${SHARED_INCLUDE_DIRS})
 
 # —————————————————————————
 # link libraries
@@ -171,11 +179,13 @@ target_link_libraries(${TARGET_LIB} PRIVATE ${SHARED_LIBRARIES})
 if(BUILD_TESTS)
     # These tests can use the Catch2-provided main
     target_link_libraries(${TARGET_TEST} PRIVATE Catch2::Catch2WithMain)
+
+    # link to own library
+    target_link_libraries(${TARGET_TEST} PRIVATE ${TARGET_LIB})
 endif()
 
 # link to own library
 target_link_libraries(${TARGET} PRIVATE ${TARGET_LIB})
-target_link_libraries(${TARGET_TEST} PRIVATE ${TARGET_LIB})
 
 # Increase stack size for llvm
 # string(REPLACE "/STACK:10000000" "/STACK:1000000000" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
