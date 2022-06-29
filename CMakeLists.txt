@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.21)
 
+# Use C++20
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(VCPKG_FEATURE_FLAGS "versions")
@@ -92,11 +97,6 @@ project(rara VERSION 0.1.0)
 # Collect sources
 # —————————————————————————
 # —————————————————————————
-include_directories(
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/src
-)
-
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 # remove main.cpp from list of sources so we can reuse the list
@@ -129,14 +129,6 @@ if(BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
-# Use C++20
-target_compile_features(${TARGET_LIB} PUBLIC cxx_std_20)
-target_compile_features(${TARGET} PUBLIC cxx_std_20)
-target_compile_features(${TARGET_TEST} PUBLIC cxx_std_20)
-set_target_properties(${TARGET_LIB} PROPERTIES CXX_EXTENSIONS OFF)
-set_target_properties(${TARGET} PROPERTIES CXX_EXTENSIONS OFF)
-set_target_properties(${TARGET_TEST} PROPERTIES CXX_EXTENSIONS OFF)
-
 # —————————————————————————
 # find packages
 # —————————————————————————
@@ -152,6 +144,9 @@ list(APPEND SHARED_INCLUDE_DIRS "${LLVM_INCLUDE_DIRS}")
 
 find_path(PARALLEL_HASHMAP_INCLUDE_DIRS "parallel_hashmap/phmap_utils.h")
 list(APPEND SHARED_INCLUDE_DIRS "${PARALLEL_HASHMAP_INCLUDE_DIRS}")
+
+find_package(tl-expected CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 if(BUILD_TESTS)
     find_package(Catch2 3 REQUIRED)
@@ -175,6 +170,7 @@ set(SHARED_LIBRARIES "")
 list(APPEND SHARED_LIBRARIES ${llvm_libs})
 
 target_link_libraries(${TARGET_LIB} PRIVATE ${SHARED_LIBRARIES})
+target_link_libraries(${TARGET_LIB} PRIVATE fmt::fmt)
 
 if(BUILD_TESTS)
     # These tests can use the Catch2-provided main
@@ -183,6 +179,8 @@ if(BUILD_TESTS)
     # link to own library
     target_link_libraries(${TARGET_TEST} PRIVATE ${TARGET_LIB})
 endif()
+
+message(STATUS "SHARED_LIBRARIES: ${SHARED_LIBRARIES}")
 
 # link to own library
 target_link_libraries(${TARGET} PRIVATE ${TARGET_LIB})

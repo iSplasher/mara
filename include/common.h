@@ -1,6 +1,9 @@
 #pragma once
 
+#include <fmt/core.h>
 #include <type_traits>
+
+#include "tl/expected.hpp"
 
 // Namespace macros
 
@@ -53,3 +56,10 @@
 #ifndef NOT_IMPLEMENTED
 #define NOT_IMPLEMENTED assertm( false, "Not implemented" );
 #endif
+
+NAMESPACE_BEGIN
+
+template<typename T, typename E>
+using expected = tl::expected<T, E>;
+
+NAMESPACE_END

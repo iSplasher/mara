@@ -2,6 +2,8 @@
   "name": "rara",
   "version": "0.1.0",
   "dependencies": [
+    "fmt",
+    "tl-expected",
     "catch2",
     "parallel-hashmap",
     {

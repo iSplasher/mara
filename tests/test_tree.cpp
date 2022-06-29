@@ -1,6 +1,4 @@
 #include <catch2/catch_test_macros.hpp>
-#include <string>
-#include <utility>
 
 #include "../include/tree.h"
 
@@ -9,8 +7,7 @@ using namespace rara;
 SCENARIO( "Tree is well formed", "[tree]" ) {
 
   GIVEN( "An empty tree" ) {
-
-    int root = 0;
+    constexpr int root = 0;
 
     Tree<int> tree( root );
 

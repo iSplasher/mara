@@ -5,12 +5,22 @@
 
 #include "./external/peeters_tree.h"
 #include "common.h"
+#include "error.h"
 
 NAMESPACE_BEGIN
 
 // forward declarations
 template<typename T>
 class SubTree;
+
+// Errors
+// -----------------------------------------------------------------------------
+
+struct TreeErrorCode : BaseErrorCode<> {
+  inline static Error<TreeErrorCode> tree_already_destroyed = { 1 << 1, "Tree already destroyed" };
+};
+
+using TreeError = Error<TreeErrorCode>;
 
 // -----------------------------------------------------------------------------
 
@@ -22,21 +32,22 @@ class SubTree;
 template<typename T>
 class Tree : public SubTree<T> {
 
+public:
   using Element         = typename SubTree<T>::Element;
   using ElementIterator = typename SubTree<T>::ElementIterator;
 
-public:
   Tree<T>( T root )
-    : SubTree<T>()
-    , _internal_tree() {
-    auto it = _internal_tree.insert( _internal_tree.end(), root );
-    this->init( std::shared_ptr<tree<T>>( &_internal_tree ), std::move( it ) );
+    : SubTree<T>() {
+    this->_internal_tree = std::make_shared<tree<T>>();
+
+    auto it              = _internal_tree->insert( _internal_tree->end(), root );
+    this->init( _internal_tree, std::move( it ) );
   }
 
   ~Tree<T>() = default;
 
 private:
-  tree<T> _internal_tree;
+  std::shared_ptr<tree<T>> _internal_tree = nullptr;
 };
 
 // -----------------------------------------------------------------------------
@@ -48,15 +59,18 @@ protected:
   using Element         = typename tree<T>::iterator;
   using ElementIterator = typename tree<T>::sibling_iterator;
 
-  SubTree<T>( std::shared_ptr<tree<T>> _internal_tree, Element&& root ) { init( _internal_tree, std::move( root ) ); }
+  // Regular constructors are protected to prevent direct instantiation. Instantiate Tree instead.
+
+  SubTree<T>( std::weak_ptr<tree<T>> _internal_tree, Element&& root ) { init( _internal_tree, std::move( root ) ); }
 
   SubTree<T>() { _root = Element(); };
 
 public:
   SubTree<T>( SubTree<T>&& )            = default;
-  ~SubTree<T>()                         = default;
 
   SubTree<T>& operator=( SubTree<T>&& ) = default;
+
+  virtual ~SubTree<T>()                 = default;
 
   /**
    * @brief Add a child to the tree, and return a sub-tree with child as root.
@@ -64,8 +78,11 @@ public:
    * @param child
    * @return SubTree new sub-tree with child as root.
    */
-  SubTree<T> add_child( T&& child ) {
-    return SubTree<T>( internal_tree, internal_tree->append_child( this->_root, child ) );
+  maybe<SubTree<T>, TreeError> add_child( const T&& child ) {
+    if ( internal_tree.expired() ) {
+      return TreeErrorCode::tree_already_destroyed;
+    }
+    return SubTree<T>( internal_tree, internal_tree.lock()->append_child( this->_root, child ) );
   }
 
   /**
@@ -91,32 +108,46 @@ public:
    *
    * @return size_t
    */
-  size_t size() { return children_size() + 1; }
+  maybe<size_t, TreeError> size() {
+
+    const auto s = children_size();
+
+    return s.has_value() ? s.value() + 1 : s;
+  }
 
   /**
-   * @brief Size at the depth the root is at.
+   * @brief Size at the depth the root is at (root inclusive)
    *
    * @return size_t
    */
-  size_t depth_size() { return internal_tree->number_of_siblings( _root ); };
+  maybe<size_t, TreeError> depth_size() {
+    if ( internal_tree.expired() ) {
+      return TreeErrorCode::tree_already_destroyed;
+    }
+    return internal_tree.lock()->number_of_siblings( _root ) + 1;
+  };
 
   /**
    * @brief Size of how many children this root has.
    *
    * @return size_t
    */
-  size_t children_size() { return internal_tree->number_of_children( _root ); };
+  maybe<size_t, TreeError> children_size() {
+    if ( internal_tree.expired() ) {
+      return TreeErrorCode::tree_already_destroyed;
+    }
+    return internal_tree.lock()->number_of_children( _root );
+  };
 
 protected:
-  void init( std::shared_ptr<tree<T>> _internal_tree, Element&& root ) {
+  void init( std::weak_ptr<tree<T>> _internal_tree, Element&& root ) {
     this->internal_tree = _internal_tree;
     this->_root         = root;
   }
 
   Element _root;
 
-private:
-  std::shared_ptr<tree<T>> internal_tree = nullptr;
+  std::weak_ptr<tree<T>> internal_tree;
 };
 
 NAMESPACE_END
