@@ -62,8 +62,8 @@ struct ErrorType {
  * @tparam C Class that defines the error codes, used to distinguish between different error classes.
  * @tparam T underlying value type, default is unsigned int. TODO: maybe change to uint_8?
  */
-template<class C, typename T = unsigned>
-using Error = const ErrorType<C, T>;
+template<class C>
+using Error = const ErrorType<C, typename C::ValueType>;
 
 /**
  * @brief Base class for error codes
@@ -72,8 +72,10 @@ using Error = const ErrorType<C, T>;
  */
 template<typename T = unsigned>
 struct BaseErrorCode {
-  inline static Error<BaseErrorCode, T> any     = 0xF;
-  inline static Error<BaseErrorCode, T> unknown = 1 << 0;
+  using ValueType                            = T;
+
+  inline static Error<BaseErrorCode> any     = 0xF;
+  inline static Error<BaseErrorCode> unknown = 1 << 0;
 };
 
 /**
@@ -82,7 +84,7 @@ struct BaseErrorCode {
  * @tparam T underlying value type, default is unsigned int
  */
 template<typename T = unsigned>
-using BaseError = Error<BaseErrorCode<T>, T>;
+using BaseError = Error<BaseErrorCode<T>>;
 
 // This part here are all operator overloads for ErrorType
 
@@ -172,13 +174,14 @@ struct ErrorCode : BaseErrorCode<> {
 
 /**
  * @brief A result class that can be used to optionally return errors from functions.
+ *        Has the same interface as std::optional.
  *
  * @tparam Result Value to return if no error occured
  * @tparam E The error type.
  */
 template<typename Result, class E>
 requires std::is_base_of<
-  Error<typename E::CodeType, typename E::ValueType>,
+  Error<typename E::CodeType>,
   E>::value struct maybe : public expected<Result, E> {
 
   constexpr maybe( Result&& value )

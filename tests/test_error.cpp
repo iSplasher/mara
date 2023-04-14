@@ -30,34 +30,34 @@ SCENARIO( "Error model", "[error]" ) {
       TestErrorCode t2;
 
       THEN( "error has 1 << 1 bit flag" ) {
-        REQUIRE( static_cast<TestError::ValueType>( t.error ) == 1 << 1 );
+        CHECK( static_cast<TestError::ValueType>( t.error ) == 1 << 1 );
       }
 
       THEN( "error == error" ) {
-        REQUIRE( t.error == t2.error );
+        CHECK( t.error == t2.error );
       }
 
       THEN( "error == alias" ) {
-        REQUIRE( t.error == t2.alias );
+        CHECK( t.error == t2.alias );
       }
 
       THEN( "error != other_error" ) {
-        REQUIRE( t.error != t.other );
+        CHECK( t.error != t.other );
       }
 
       THEN( "error default message" ) {
-        REQUIRE( t.error.message == "error" );
+        CHECK( t.error.message == "error" );
       }
 
       THEN( "can override default message" ) {
         TestError e = { t.error, "override" };
-        REQUIRE( e.message == "override" );
-        REQUIRE( t.error.message == "error" );
+        CHECK( e.message == "override" );
+        CHECK( t.error.message == "error" );
       }
 
       THEN( "can instantiate only from code" ) {
         TestError e = { t.error };
-        REQUIRE( e.message == "error" );
+        CHECK( e.message == "error" );
       }
     }
 
@@ -81,12 +81,12 @@ SCENARIO( "Error model", "[error]" ) {
       TestErrorCode2 t2;
 
       THEN( "error1.value != error2.value where value have the same integer" ) {
-        REQUIRE( std::is_same_v<TestError1, TestError2> == false );
-        // REQUIRE( t1.error != t2.error );
+        CHECK( std::is_same_v<TestError1, TestError2> == false );
+        // CHECK( t1.error != t2.error );
       }
 
       THEN( "error1.value == error2.value where value have the same integer and casting them" ) {
-        REQUIRE( static_cast<unsigned int>( t1.error ) == static_cast<unsigned int>( t2.error ) );
+        CHECK( static_cast<unsigned int>( t1.error ) == static_cast<unsigned int>( t2.error ) );
       }
     }
 
@@ -104,25 +104,25 @@ SCENARIO( "Error model", "[error]" ) {
 
       THEN( "error1 & error1 returns error1" ) {
         static_assert( std::is_same_v<decltype( t1.one & t1.one ), TestError1>, "operator should return same type" );
-        REQUIRE( static_cast<TestError1::ValueType>( t1.one & t1.one ) == t1.one.value );
+        CHECK( static_cast<TestError1::ValueType>( t1.one & t1.one ) == t1.one.value );
       }
 
       THEN( "error1 & error2 returns new error" ) {
         static_assert( std::is_same_v<decltype( t1.one & t1.two ), TestError1>, "operator should return same type" );
-        REQUIRE( static_cast<TestError1::ValueType>( t1.one & t1.two ) == 0 );
-        REQUIRE( static_cast<bool>( t1.one & t1.two ) == false );
+        CHECK( static_cast<TestError1::ValueType>( t1.one & t1.two ) == 0 );
+        CHECK( static_cast<bool>( t1.one & t1.two ) == false );
       }
 
       THEN( "error1 | error2 returns new error" ) {
         static_assert( std::is_same_v<decltype( t1.one | t1.two ), TestError1>, "operator should return same type" );
         const auto n = t1.one | t1.two;
-        REQUIRE( static_cast<bool>( t1.one & n ) == true );
+        CHECK( static_cast<bool>( t1.one & n ) == true );
       }
 
       THEN( "error1 | alias returns error1" ) {
         static_assert( std::is_same_v<decltype( t1.one | t1.alias ), TestError1>, "operator should return same type" );
         const auto n = t1.one | t1.alias;
-        REQUIRE( static_cast<bool>( t1.one & n ) == true );
+        CHECK( static_cast<bool>( t1.one & n ) == true );
       }
 
       THEN( "any works" ) {
@@ -130,7 +130,7 @@ SCENARIO( "Error model", "[error]" ) {
           std::is_same_v<decltype( t1.any ), const BaseError<TestError1::ValueType>>, "should return base type"
         );
         const auto n = t1.one | t1.two;
-        REQUIRE( static_cast<bool>( t1.any & n ) == true );
+        CHECK( static_cast<bool>( t1.any & n ) == true );
       }
 
       THEN( "unknown works" ) {
@@ -138,7 +138,7 @@ SCENARIO( "Error model", "[error]" ) {
           std::is_same_v<decltype( t1.unknown ), const BaseError<TestError1::ValueType>>, "should return base type"
         );
         const auto n = t1.one | t1.two;
-        REQUIRE( static_cast<bool>( t1.unknown & n ) == false );
+        CHECK( static_cast<bool>( t1.unknown & n ) == false );
       }
     }
   }
@@ -165,10 +165,10 @@ SCENARIO( "Maybe", "[error]" ) {
         maybe<int, TestError> m1( 2 );
         maybe<int, TestError> m2( t.two );
 
-        REQUIRE( m1.has_value() == true );
-        REQUIRE( m1.value() == 2 );
-        REQUIRE( m2.has_value() == false );
-        REQUIRE( m2.error() == t.two );
+        CHECK( m1.has_value() == true );
+        CHECK( m1.value() == 2 );
+        CHECK( m2.has_value() == false );
+        CHECK( m2.error() == t.two );
       }
     }
   }

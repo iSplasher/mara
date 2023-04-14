@@ -54,11 +54,12 @@
   inline bool flags( E x ) { return static_cast<std::underlying_type_t<E>>( x ) != 0; };
 
 #ifndef NOT_IMPLEMENTED
-#define NOT_IMPLEMENTED assertm( false, "Not implemented" );
+#define NOT_IMPLEMENTED assert( false && "Not implemented" );
 #endif
 
 NAMESPACE_BEGIN
 
+// Has same interface as std::optional
 template<typename T, typename E>
 using expected = tl::expected<T, E>;
 
