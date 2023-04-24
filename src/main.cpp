@@ -1,17 +1,22 @@
 
 #include "../include/lexer.h"
 #include "../include/tree.h"
+#include "../include/logger.h"
 
-using namespace rara;
+#include <iostream>
+#include <format>
 
-int main( int argc, const char** argv ) {
+using namespace NAMESPACE;
 
-  std::string  program = "a :: 2";
-  lexer::Lexer lexer( program );
+int main(int argc, const char **argv) {
 
-  Tree<int> tree( 0 );
+    setupLogger();
 
-  auto tokens = lexer.tokenize();
+    std::string program = "a :: 2";
+    lexer::Lexer lexer(program);
 
-  return 0;
+    Tree<int> tree(0);
+
+
+    return 0;
 }

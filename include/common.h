@@ -7,8 +7,12 @@
 
 // Namespace macros
 
+#ifndef NAMESPACE
+#define NAMESPACE rara
+#endif
+
 #ifndef NAMESPACE_BEGIN
-#define NAMESPACE_BEGIN namespace rara {
+#define NAMESPACE_BEGIN namespace NAMESPACE {
 #endif
 
 #ifndef NAMESPACE_END
