@@ -148,14 +148,14 @@ std::vector<std::shared_ptr<TokenRule>> Tokenizer::getRulesForChar(char c) {
             r = rule;
         }
 
-        if (r->matcher != nullptr) {
+        if (r != nullptr && r->matcher != nullptr) {
             if (!r->matcher(c, _current_index, _program)) {
                 r = nullptr;
             }
         }
 
         if (r != nullptr) {
-            rules.push_back(rule);
+            rules.push_back(r);
         }
     }
 

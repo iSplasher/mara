@@ -3,6 +3,7 @@
 //
 #include "include/test.h"
 #include "../include/tokenizer/tokenizer.h"
+#include "../include/utility.h"
 
 using namespace NAMESPACE;
 
@@ -72,11 +73,20 @@ static test::suite _ = [] {
         };
 
 
-        it("should be able to handle a :: 2") = [] {
+        it("should be able to handle the identifier in a :: 2") = [] {
             std::string_view program = "a :: 2";
             auto t1 = lexer::Tokenizer{program};
 
             auto r1 = lexer::TokenRule{"identifier", "", " "};
+            r1.matcher = [](char c, unsigned long idx, std::string_view program) {
+                auto indices = contegiousText(program, idx);
+                if (indices.first != idx) {
+                    if (std::isdigit(c)) {
+                        return true;
+                    }
+                }
+                return std::isalpha(c) || c == '_';
+            };
 
             t1.registerRule(r1);
 
@@ -85,13 +95,13 @@ static test::suite _ = [] {
             expect(stack.size() == 0_i);
 
             auto &char_history = t1._char_history;
-            expect(_ul(char_history.size()) == _ul(program.size() * 2 - 1));
+            expect(_ul(char_history.size()) == _ul(program.size()));
 
             auto &stack_history = t1._rule_stack_history;
             expect(stack_history.size() == 1_i);
             auto r = stack_history[0];
             auto c = r->location.toString();
-            auto ce = "(1:1)-(1:13)";
+            auto ce = "(1:1)-(1:2)";
             expect(test::eq(c, ce));
 
             expect(tokens.size() == 0_i);

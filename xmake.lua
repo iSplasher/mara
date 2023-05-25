@@ -12,22 +12,22 @@ add_requires("vcpkg::fmt", { alias = "fmt" })
 add_requires("vcpkg::tl-expected", { alias = "tl-expected" })
 add_requires("vcpkg::bext-ut", { alias = "bext-ut" })
 add_requires("vcpkg::parallel-hashmap", { alias = "parallel-hashmap" })
---add_requires("vcpkg::llvm >=14.0.6", { alias = "llvm", configs = {
---    baseline = "c90d27a6f470da5f6d1b64d13a978ef493e9a3db",
---    default_features = false,
---    features = {
---        "default-options",
---        "default-targets",
---        "tools",
---        "utils"
---    },
---    ["default-features"] = false,
---} })
+add_requires("vcpkg::llvm >=14.0.6", { alias = "llvm", configs = {
+   baseline = "c90d27a6f470da5f6d1b64d13a978ef493e9a3db",
+   default_features = false,
+   features = {
+       "default-options",
+       "default-targets",
+       "tools",
+       "utils"
+   },
+   ["default-features"] = false,
+} })
 
 function p()
     -- vcpkg packages
     add_packages("spdlog", "fmt", "tl-expected", "parallel-hashmap")
-    --add_packages("llvm")
+    add_packages("llvm")
     -- debug packages
     add_packages("catch2")
 
