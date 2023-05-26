@@ -1,3 +1,9 @@
+# Mara
+
+An experimental language.
+
+See `examples\syntax.ra` for a provisional version of the syntax.
+
 Requires python 3.6+ to build and configure
 
 ## Development
